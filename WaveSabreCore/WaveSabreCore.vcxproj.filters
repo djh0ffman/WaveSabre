@@ -92,7 +92,7 @@
     <ClInclude Include="include\WaveSabreCore\VoiceEffect.h">
       <Filter>WaveSabreCore</Filter>
     </ClInclude>
-    <ClInclude Include="include\WaveSabreCore\RecordBuffer.h">
+    <ClInclude Include="include\WaveSabreCore\ReverseBuffer.h">
       <Filter>WaveSabreCore</Filter>
     </ClInclude>
   </ItemGroup>
@@ -192,7 +192,7 @@
     <ClCompile Include="src\VoiceEffect.cpp">
       <Filter>WaveSabreCore</Filter>
     </ClCompile>
-    <ClCompile Include="src\RecordBuffer.cpp">
+    <ClCompile Include="src\ReverseBuffer.cpp">
       <Filter>WaveSabreCore</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,13 +1,13 @@
-#ifndef __WAVESABRECORE_RECORDBUFFER_H__
-#define __WAVESABRECORE_RECORDBUFFER_H__
+#ifndef __WAVESABRECORE_REVERSEBUFFER_H__
+#define __WAVESABRECORE_REVERSEBUFFER_H__
 
 namespace WaveSabreCore
 {
-	class RecordBuffer
+	class ReverseBuffer
 	{
 	public:
-		RecordBuffer(float lengthMs = 0.0f);
-		~RecordBuffer();
+		ReverseBuffer(float lengthMs = 0.0f);
+		~ReverseBuffer();
 
 		void SetLength(float lengthMs);
 

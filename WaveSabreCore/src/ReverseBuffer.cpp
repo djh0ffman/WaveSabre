@@ -1,20 +1,20 @@
-#include <WaveSabreCore/RecordBuffer.h>
+#include <WaveSabreCore/ReverseBuffer.h>
 #include <WaveSabreCore/Helpers.h>
 
 namespace WaveSabreCore
 {
-	RecordBuffer::RecordBuffer(float lengthMs)
+	ReverseBuffer::ReverseBuffer(float lengthMs)
 	{
 		buffer = nullptr;
 		SetLength(lengthMs);
 	}
 
-	RecordBuffer::~RecordBuffer()
+	ReverseBuffer::~ReverseBuffer()
 	{
 		if (buffer) delete[] buffer;
 	}
 
-	void RecordBuffer::SetLength(float lengthMs)
+	void ReverseBuffer::SetLength(float lengthMs)
 	{
 		int newLength = (int)((double)lengthMs * Helpers::CurrentSampleRate / 1000.0);
 		if (newLength < 1) newLength = 1;
@@ -30,18 +30,18 @@ namespace WaveSabreCore
 		}
 	}
 
-	void RecordBuffer::WriteSample(float sample)
+	void ReverseBuffer::WriteSample(float sample)
 	{
 		buffer[currentPosition] = sample;
 		currentPosition = (currentPosition + 1) % length;
 	}
 
-	void RecordBuffer::Trigger()
+	void ReverseBuffer::Trigger()
 	{
 		playbackPostion = currentPosition;
 	}
 
-	float RecordBuffer::ReadSample()
+	float ReverseBuffer::ReadSample()
 	{
 		float sample = buffer[playbackPostion];
 		playbackPostion = (playbackPostion - 1) % length;
