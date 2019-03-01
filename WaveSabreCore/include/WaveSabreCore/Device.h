@@ -26,6 +26,7 @@ namespace WaveSabreCore
 
 	protected:
 		virtual void clearOutputs(float **outputs, int numSamples);
+		virtual void copyBuffers(float **inputs, float **outputs, int numSamples);
 
 		int numParams;
 		void *chunkData;

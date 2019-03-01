@@ -26,7 +26,8 @@ vsts = {
    "Thunder",
    "Cathedral",
    "Adultery",
-   "Specimen"
+   "Specimen",
+   "Glitcher"
 }
 
 function generate_def(projectname, path)

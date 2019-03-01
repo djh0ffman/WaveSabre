@@ -16,4 +16,6 @@
 #include "Twister.h"
 #include "Cathedral.h"
 
+#include "Glitcher.h"
+
 #endif

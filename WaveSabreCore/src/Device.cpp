@@ -15,7 +15,7 @@ namespace WaveSabreCore
 	}
 
 	void Device::AllNotesOff() { }
-	void Device::NoteOn(int note, int velocity, int deltaSamples) { }
+	void Device::NoteOn(int note, int velocity, int deltaSamples) {	}
 	void Device::NoteOff(int note, int deltaSamples) { }
 
 	void Device::SetSampleRate(float sampleRate)
@@ -68,6 +68,14 @@ namespace WaveSabreCore
 		for (int i = 0; i < 2; i++)
 		{
 			for (int j = 0; j < numSamples; j++) outputs[i][j] = 0.0f;
+		}
+	}
+
+	void Device::copyBuffers(float **inputs, float **outputs, int numSamples)
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			for (int j = 0; j < numSamples; j++) outputs[i][j] = inputs[i][j];
 		}
 	}
 }

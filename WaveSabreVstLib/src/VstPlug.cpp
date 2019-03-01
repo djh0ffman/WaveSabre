@@ -5,7 +5,7 @@ using namespace WaveSabreCore;
 
 namespace WaveSabreVstLib
 {
-	VstPlug::VstPlug(audioMasterCallback audioMaster, int numParams, int numInputs, int numOutputs, VstInt32 id, Device *device, bool synth)
+	VstPlug::VstPlug(audioMasterCallback audioMaster, int numParams, int numInputs, int numOutputs, VstInt32 id, Device *device, bool synth, bool acceptMidi)
 		: AudioEffectX(audioMaster, 1, numParams)
 	{
 		this->numParams = numParams;
@@ -13,6 +13,7 @@ namespace WaveSabreVstLib
 		this->numOutputs = numOutputs;
 		this->device = device;
 		this->synth = synth;
+		this->acceptMidi = acceptMidi;
 
 		setNumInputs(numInputs);
 		setNumOutputs(numOutputs);
@@ -157,13 +158,13 @@ namespace WaveSabreVstLib
 
 	VstInt32 VstPlug::canDo(char *text)
 	{
-		if (synth && (!strcmp(text, "receiveVstEvents") || !strcmp(text, "receiveVstMidiEvents"))) return 1;
+		if ((synth || acceptMidi) && (!strcmp(text, "receiveVstEvents") || !strcmp(text, "receiveVstMidiEvent"))) return 1;
 		return -1;
 	}
 
 	VstInt32 VstPlug::getNumMidiInputChannels()
 	{
-		return synth ? 1 : 0;
+		return synth || acceptMidi ? 1 : 0;
 	}
 
 	void VstPlug::setEditor(VstEditor *editor)

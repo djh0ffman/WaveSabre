@@ -11,7 +11,7 @@ namespace WaveSabreVstLib
 	class VstPlug : public AudioEffectX
 	{
 	public:
-		VstPlug(audioMasterCallback audioMaster, int numParams, int numInputs, int numOutputs, VstInt32 id, WaveSabreCore::Device *device, bool synth = false);
+		VstPlug(audioMasterCallback audioMaster, int numParams, int numInputs, int numOutputs, VstInt32 id, WaveSabreCore::Device *device, bool synth = false, bool acceptMidi = false);
 		virtual ~VstPlug();
 
 		virtual void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames);
@@ -47,6 +47,7 @@ namespace WaveSabreVstLib
 	private:
 		int numParams, numInputs, numOutputs;
 		bool synth;
+		bool acceptMidi;
 
 		char programName[kVstMaxProgNameLen + 1];
 

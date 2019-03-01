@@ -86,6 +86,15 @@
     <ClInclude Include="include\WaveSabreCore\MxcsrFlagGuard.h">
       <Filter>WaveSabreCore</Filter>
     </ClInclude>
+    <ClInclude Include="include\WaveSabreCore\Glitcher.h">
+      <Filter>WaveSabreCore\Devices</Filter>
+    </ClInclude>
+    <ClInclude Include="include\WaveSabreCore\VoiceEffect.h">
+      <Filter>WaveSabreCore</Filter>
+    </ClInclude>
+    <ClInclude Include="include\WaveSabreCore\RecordBuffer.h">
+      <Filter>WaveSabreCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="WaveSabreCore">
@@ -175,6 +184,15 @@
       <Filter>WaveSabreCore\Devices</Filter>
     </ClCompile>
     <ClCompile Include="src\MxcsrFlagGuard.cpp">
+      <Filter>WaveSabreCore</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Glitcher.cpp">
+      <Filter>WaveSabreCore\Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VoiceEffect.cpp">
+      <Filter>WaveSabreCore</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RecordBuffer.cpp">
       <Filter>WaveSabreCore</Filter>
     </ClCompile>
   </ItemGroup>
