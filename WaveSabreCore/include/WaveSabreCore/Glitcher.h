@@ -5,7 +5,7 @@
 #include "Device.h"
 #include "BiquadFilter.h"
 #include "Envelope.h"
-#include "RecordBuffer.h"
+#include "ReverseBuffer.h"
 
 namespace WaveSabreCore
 {
@@ -34,7 +34,7 @@ namespace WaveSabreCore
 
 		Glitcher();
 
-		const int ReverseBufferLength = 20 * 1000;
+		const int ReverseBufferLength = 21 * 1000;
 
 		virtual void SetParam(int index, float value);
 		virtual float GetParam(int index) const;
@@ -68,8 +68,8 @@ namespace WaveSabreCore
 		bool dryActive;
 		float gateAttack, gateDecay, gateSustain, gateRelease;
 
-		RecordBuffer reverseLeft;
-		RecordBuffer reverseRight;
+		ReverseBuffer reverseLeft;
+		ReverseBuffer reverseRight;
 
 		BiquadFilter highpass[2];
 		BiquadFilter peak1[2];
