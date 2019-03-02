@@ -9,38 +9,17 @@ namespace WaveSabreCore
 		: VoiceEffect((int)ParamIndices::NumParams)
 	{
 		for (int i = 0; i < maxVoices; i++) voices[i] = new GlitcherVoice(this);
-
-		lowCutFreq = 20.0f;
-		lowCutQ = 1.0f;
-
-		peak1Freq = 1000.0f;
-		peak1Gain = 0.0f;
-		peak1Q = 1.0f;
-
-		peak2Freq = 3000.0f;
-		peak2Gain = 0.0f;
-		peak2Q = 1.0f;
-
-		peak3Freq = 7000.0f;
-		peak3Gain = 0.0f;
-		peak3Q = 1.0f;
-
-		highCutFreq = 20000.0f;
-		highCutQ = 1.0f;
-
-		for (int i = 0; i < 2; i++)
-		{
-			highpass[i].SetType(BiquadFilterType::Highpass);			
-			peak1[i].SetType(BiquadFilterType::Peak);
-			peak2[i].SetType(BiquadFilterType::Peak);
-			peak3[i].SetType(BiquadFilterType::Peak);
-		}
-
+		
 		gateAttack = 1.0f;
 		gateDecay = 1.0f;
 		gateSustain = 1.0f;
 		gateRelease = 1.0f;
 
+		filterFreq = 0.5f;
+		filterLfoAmount = 0.5f;
+		filterLfoRateAdjust = 1.0f;
+		filterWave = LFOWave::Sin;
+		
 		dryActive = true;
 
 		reverseLeft.SetLength(ReverseBufferLength);
@@ -59,6 +38,8 @@ namespace WaveSabreCore
 
 	void Glitcher::GlitcherVoice::Run(double songPosition, float **inputs, float **outputs, int numSamples)
 	{
+		float freq = 0.0f;
+
 		switch (glitchMode)
 		{
 		case GlitchMode::DrySignal:
@@ -98,6 +79,22 @@ namespace WaveSabreCore
 				gateEnv.Next();
 			}
 			break;
+		case GlitchMode::AutoFilter:
+			lfo.LFOWave = glitcher->filterWave;
+			lfo.SetRate((int)((float)Velocity / 128.0f * 15.0f));
+			lfo.SetRatePercent(glitcher->filterLfoRateAdjust);
+			for (int i = 0; i < numSamples; i++)
+			{
+				freq = glitcher->filterFreq;  //lfo.Next();
+				freq = freq + (lfo.Next() * glitcher->filterLfoAmount);
+				freq = Helpers::ParamToFrequency(Helpers::Clamp(freq, 0.0f, 1.0f));
+				for (int j = 0; j < 2; j++)
+				{
+					filter[j].SetFreq(freq);
+					outputs[j][i] += filter[j].Next(inputs[j][i]);
+				}
+			}
+			break;
 		default:
 			break;
 		}
@@ -135,6 +132,19 @@ namespace WaveSabreCore
 			glitcher->reverseRight.Trigger();
 			Voice::NoteOn(note, velocity, detune, pan);
 			break;
+		case GlitchMode::AutoFilter:
+			for (int i = 0; i < 2; i++)
+			{
+				filter[0].SetType(BiquadFilterType::Lowpass);
+				filter[0].SetFreq(3000.0f);
+				filter[0].SetQ(1.0f);
+			}
+			lfo.SetRate(8);
+			lfo.LFOWave = LFOWave::Sin;
+			lfo.Trigger(0.0f);
+			glitcher->dryActive = false;
+			Voice::NoteOn(note, velocity, detune, pan);
+			break;
 		default:
 			break;
 		}
@@ -153,12 +163,16 @@ namespace WaveSabreCore
 			break;
 		case GlitchMode::Reverse:
 			glitcher->dryActive = true;
+			IsOn = false;
+			break;
+		case GlitchMode::AutoFilter:
+			glitcher->dryActive = true;
+			IsOn = false;
 			break;
 		default:
 			break;
 		}
 
-		IsOn = false;
 	}
 
 	void Glitcher::SetParam(int index, float value)
@@ -169,6 +183,11 @@ namespace WaveSabreCore
 		case ParamIndices::GateDecay: gateDecay = Helpers::ScalarToEnvValue(value); break;
 		case ParamIndices::GateSustain: gateSustain = value; break;
 		case ParamIndices::GateRelease: gateRelease = Helpers::ScalarToEnvValue(value); break;
+
+		case ParamIndices::FilterFreq: filterFreq = value; break;
+		case ParamIndices::FilterLfoAmount: filterLfoAmount = value; break;
+		case ParamIndices::FilterLfoRateAdjust: filterLfoRateAdjust; break;
+		case ParamIndices::FilterWave: filterWave = Helpers::ParamToLFOWave(value); break;
 		}
 	}
 
@@ -181,6 +200,11 @@ namespace WaveSabreCore
 		case ParamIndices::GateDecay: return Helpers::EnvValueToScalar(gateDecay);
 		case ParamIndices::GateSustain: return gateSustain;
 		case ParamIndices::GateRelease: return Helpers::EnvValueToScalar(gateRelease);
+
+		case ParamIndices::FilterFreq: return filterFreq;
+		case ParamIndices::FilterLfoAmount: return filterLfoAmount; break;
+		case ParamIndices::FilterLfoRateAdjust: return filterLfoRateAdjust; break;
+		case ParamIndices::FilterWave: return Helpers::LFOWaveToParam(filterWave);
 		}
 	}
 }

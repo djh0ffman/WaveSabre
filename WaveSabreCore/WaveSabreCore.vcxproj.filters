@@ -95,6 +95,9 @@
     <ClInclude Include="include\WaveSabreCore\ReverseBuffer.h">
       <Filter>WaveSabreCore</Filter>
     </ClInclude>
+    <ClInclude Include="include\WaveSabreCore\LFO.h">
+      <Filter>WaveSabreCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="WaveSabreCore">
@@ -193,6 +196,9 @@
       <Filter>WaveSabreCore</Filter>
     </ClCompile>
     <ClCompile Include="src\ReverseBuffer.cpp">
+      <Filter>WaveSabreCore</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LFO.cpp">
       <Filter>WaveSabreCore</Filter>
     </ClCompile>
   </ItemGroup>

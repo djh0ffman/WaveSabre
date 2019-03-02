@@ -3,6 +3,7 @@
 
 #include "StateVariableFilter.h"
 #include "Twister.h"
+#include "LFO.h"
 
 namespace WaveSabreCore
 {
@@ -68,6 +69,9 @@ namespace WaveSabreCore
 
 		static Spread ParamToSpread(float param);
 		static float SpreadToParam(Spread spread);
+
+		static LFOWave ParamToLFOWave(float param);
+		static float LFOWaveToParam(LFOWave lfoWave);
 
 	private:
 		static const int fastCosTabLog2Size = 9; // size = 512

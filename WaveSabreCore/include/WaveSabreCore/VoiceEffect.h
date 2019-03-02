@@ -43,6 +43,7 @@ namespace WaveSabreCore
 
 			bool IsOn;
 			int Note;
+			int Velocity;
 
 			float Detune;
 			float Pan;

@@ -355,4 +355,15 @@ namespace WaveSabreCore
 	{
 		return (float)spread / 2.0f;
 	}
+
+	LFOWave Helpers::ParamToLFOWave(float param)
+	{
+		return (LFOWave)(int)(param * 3.0f);
+	}
+
+	float Helpers::LFOWaveToParam(LFOWave lfoWave)
+	{
+		return (float)lfoWave / 3.0f;
+	}
+
 }

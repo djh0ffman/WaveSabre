@@ -159,6 +159,7 @@ namespace WaveSabreCore
 		Note = note;
 		Detune = detune;
 		Pan = pan;
+		Velocity = velocity;
 	}
 
 	void VoiceEffect::Voice::NoteOff()

@@ -21,5 +21,10 @@ void GlitcherEditor::Open()
 
 	startNextRow();
 
+	addKnob((VstInt32)Glitcher::ParamIndices::FilterFreq, "FLT FREQ");
+	addKnob((VstInt32)Glitcher::ParamIndices::FilterLfoAmount, "LFO AMT");
+	addKnob((VstInt32)Glitcher::ParamIndices::FilterLfoRateAdjust, "RATE ADJ");
+	addKnob((VstInt32)Glitcher::ParamIndices::FilterWave, "LFO WAVE");
+
 	VstEditor::Open();
 }
