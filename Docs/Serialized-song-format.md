@@ -25,7 +25,10 @@ list of tracks (in calculation order):
  int: device count
  list of device indexes:
   int: device index
- int: midi lane id
+ int: midi send count
+ list of midi sends
+  int: midi lane id
+  int: device id
  int: automation count
  list of automations:
   int: device index
@@ -49,6 +52,7 @@ effect id's:
 10: Cathedral
 11: Adultery
 12: Specimen
+13: Glitcher
 
 event types:
 0: Note on

@@ -27,8 +27,13 @@ void GlitcherVst::getParameterName(VstInt32 index, char *text)
 
 	case Glitcher::ParamIndices::FilterFreq: vst_strncpy(text, "Flt Frq", kVstMaxParamStrLen); break;
 	case Glitcher::ParamIndices::FilterLfoAmount: vst_strncpy(text, "Flt Lfo Amt", kVstMaxParamStrLen); break;
-	case Glitcher::ParamIndices::FilterLfoRateAdjust: vst_strncpy(text, "Flt Rat Adj", kVstMaxParamStrLen); break;
+	case Glitcher::ParamIndices::FilterLfoPhase: vst_strncpy(text, "Flt Lfo Phs", kVstMaxParamStrLen); break;
+	case Glitcher::ParamIndices::FilterTempoSync: vst_strncpy(text, "Flt TmpSync", kVstMaxParamStrLen); break;
 	case Glitcher::ParamIndices::FilterWave: vst_strncpy(text, "Flt Lfo Wav", kVstMaxParamStrLen); break;
+
+	case Glitcher::ParamIndices::RepeatLoopLength: vst_strncpy(text, "Rpt Lp Len", kVstMaxParamStrLen); break;
+	case Glitcher::ParamIndices::RepeatLoopMode: vst_strncpy(text, "Rpt Lp Mod", kVstMaxParamStrLen); break;
+	case Glitcher::ParamIndices::RepeatPitch : vst_strncpy(text, "Rpt Ptch", kVstMaxParamStrLen); break;
 	}
 }
 

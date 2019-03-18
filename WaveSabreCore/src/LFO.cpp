@@ -10,30 +10,25 @@ namespace WaveSabreCore
 		phase = 0.0f;
 		phaseInc = 0.0f;
 		LFOWave = LFOWave::Sin;
-		ratePercent = 1.0f;
 	}
 
-	void LFO::SetRate(int rate)
+	// tempo sync
+	void LFO::SetTempoRate(int rate)
 	{ 
-		double frequency = Helpers::CurrentTempo > 0.0f ? 60.0f / Helpers::CurrentTempo : 60.0f / 120.0f;
-		double scaler = 1.0f / NoteDivisionScalers[rate];
-		double syncRequency = frequency * scaler;
-		phaseInc = syncRequency / (Helpers::CurrentSampleRate);
-	}
-	  
-	void LFO::SetRate(int rate, double songPosition)
-	{
-		double frequency = Helpers::CurrentTempo > 0.0f ? 60.0f / Helpers::CurrentTempo : 60.0f / 120.0f;
-		double scaler = 1.0f / NoteDivisionScalers[rate];
-		double syncRequency = frequency * scaler;
-		phaseInc = syncRequency / Helpers::CurrentSampleRate;
-		double p = songPosition * scaler;
-		phase = p - floor(p);
+		rate++;															// do this or we start on a tripplet
+		double frequency = (Helpers::CurrentTempo / 60.0f) * 8.0f;		// base frequency at 1/32
+		if (rate % 2 == 0)												// tripplets inbetween each rate value
+			frequency = frequency * 3 / 2;
+		rate = rate / 2;
+		frequency = frequency / (1 << rate);							// log divide downwards
+		phaseInc = frequency / (Helpers::CurrentSampleRate);
 	}
 
-	void LFO::SetRatePercent(float percent)
+	// free running
+	void LFO::SetFreeRate(double rate)
 	{
-		ratePercent = percent;
+		double frequency = 20.0f * rate * rate;
+		phaseInc = frequency / (Helpers::CurrentSampleRate);
 	}
 
 	void LFO::Trigger(float phaseStart)
@@ -64,7 +59,7 @@ namespace WaveSabreCore
 		}
 
 		// calculate next phase position
-		phase += (phaseInc * ratePercent);
+		phase += (phaseInc);
 		if (phase >= 1.0f)
 		{
 			phase -= 1.0f;

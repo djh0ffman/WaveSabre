@@ -136,7 +136,12 @@ namespace WaveSabreConvert
                     writer.Write(deviceId);
                 }
 
-                writer.Write(track.MidiLaneId);
+                writer.Write(track.MidiSends.Count);
+                foreach (var midiSend in track.MidiSends)
+                {
+                    writer.Write(midiSend.MidiLaneId);
+                    writer.Write(midiSend.DeviceId);
+                }
 
                 writer.Write(track.Automations.Count);
                 foreach (var automation in track.Automations)

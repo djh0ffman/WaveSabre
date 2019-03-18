@@ -19,6 +19,7 @@ namespace WaveSabreConvert
         XmlReader reader;
 
         Dictionary<LiveProject.Track, string> outputRoutingStrings;
+        Dictionary<LiveProject.Track, string> midiOutputRoutingStrings;
         Dictionary<LiveProject.Track, List<ReturnSendInfo>> returnSendInfos;
 
         string getAttrib(string attribName)
@@ -50,7 +51,7 @@ namespace WaveSabreConvert
         {
             return getDoubleAttrib("Value");
         }
-
+        
         int getIntValueAttrib()
         {
             return getIntAttrib("Value");
@@ -66,6 +67,7 @@ namespace WaveSabreConvert
             project = new LiveProject();
 
             outputRoutingStrings = new Dictionary<LiveProject.Track, string>();
+            midiOutputRoutingStrings = new Dictionary<LiveProject.Track, string>();
             returnSendInfos = new Dictionary<LiveProject.Track, List<ReturnSendInfo>>();
 
             using (var originalStream = new FileInfo(fileName).OpenRead())
@@ -112,6 +114,51 @@ namespace WaveSabreConvert
                             }
                         }
                     }
+                }
+            }
+
+            foreach (var kvp in midiOutputRoutingStrings)
+            {
+                try
+                {
+                    var routingString = kvp.Value;
+                    switch (routingString)
+                    {
+                        case "MidiOut/None": break;
+
+                        default:
+                            if (!routingString.StartsWith("MidiOut/")) throw new Exception("routing string must begin with \"AudioOut/\"");
+                            routingString = routingString.Replace("MidiOut/", "");
+                            if (!routingString.StartsWith("Track.")) throw new Exception("unrecognized routing string format");
+                            string trackId = "";
+                            int deviceId = -1;
+
+                            routingString = routingString.Replace("Track.", "");
+                            var parts = routingString.Split('/');
+
+                            trackId = parts[0];
+                            deviceId = Convert.ToInt32(parts[1].Split('.')[1]);
+                        
+                            LiveProject.Track sendTarget = null;
+                            foreach (var track in project.Tracks)
+                            {
+                                if (track != kvp.Key && track.Id == trackId)
+                                {
+                                    sendTarget = track;
+                                    break;
+                                }
+                            }
+                            if (sendTarget == null) throw new Exception("couldn't find midi target track");
+                            if (sendTarget.Devices.Count <= deviceId) throw new Exception("couldn't find midi target device");
+                            kvp.Key.MidiDestinationTrack = sendTarget;
+                            kvp.Key.MidiDestinationDevice = sendTarget.Devices[deviceId];
+
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Unrecognized MidiOutputRouting: " + kvp.Value + " (" + e.Message + ")");
                 }
             }
 
@@ -258,6 +305,17 @@ namespace WaveSabreConvert
                     {
                         case "DeviceChain":
                             if (!reader.IsEmptyElement) parseInnerDeviceChain(track);
+                            break;
+
+                        case "MidiOutputRouting":
+                            while (reader.Read())
+                            {
+                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "Target")
+                                {
+                                    midiOutputRoutingStrings.Add(track, getValueAttrib());
+                                    break;
+                                }
+                            }
                             break;
 
                         case "AudioOutputRouting":

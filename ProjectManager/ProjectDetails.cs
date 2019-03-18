@@ -59,7 +59,8 @@ namespace ProjectManager
                     d++;
                 }
 
-                trackNode.Nodes.Add(new TreeNode(string.Format("Midi Events: {0}", track.Events.Count)));
+                // TODO: clean up this whole thing
+                //trackNode.Nodes.Add(new TreeNode(string.Format("Midi Events: {0}", track.Events.Count)));
                 trackNode.Nodes.Add(new TreeNode("Devices", deviceNodes.ToArray()));
                 trackNodes.Add(trackNode);
                 t++;

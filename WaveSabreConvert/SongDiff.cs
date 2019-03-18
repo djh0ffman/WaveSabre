@@ -314,10 +314,13 @@ namespace WaveSabreConvert
                 {
                     for (int i = 0; i < a.DeltaCodedEvents.Count; i++)
                     {
-                        var aEvent = a.DeltaCodedEvents[i];
-                        var bEvent = b.DeltaCodedEvents[i];
-                        var eventDiff = new EventDiff(aEvent, bEvent, i);
-                        if (!eventDiff.IsEmpty) eventDiffs.Add(eventDiff);
+                        for (int j = 0; j < a.DeltaCodedEvents.Count; j++)
+                        {
+                            var aEvent = a.DeltaCodedEvents[j].MidiEvents[i];
+                            var bEvent = b.DeltaCodedEvents[j].MidiEvents[i];
+                            var eventDiff = new EventDiff(aEvent, bEvent, i);
+                            if (!eventDiff.IsEmpty) eventDiffs.Add(eventDiff);
+                        }
                     }
                 }
 

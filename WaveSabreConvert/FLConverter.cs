@@ -273,6 +273,9 @@ namespace WaveSabreConvert
                 if (sabreDevice != null) track.Devices.Add(sabreDevice);
             }
 
+            var midi = new Song.MidiEvents();
+            midi.DeviceId = 0;
+
             // notes
             foreach (var flTrack in project.Tracks)
             {
@@ -314,7 +317,7 @@ namespace WaveSabreConvert
                                     }
 
                                     // note position is good, so add it
-                                    track.Events.Add(new Song.Event()
+                                    midi.Events.Add(new Song.Event()
                                     {
                                         Type = Song.EventType.NoteOn,
                                         Note = note.Key,
@@ -322,7 +325,7 @@ namespace WaveSabreConvert
                                         TimeStamp = PositionToSamples(notePosition + position)
                                     });
 
-                                    track.Events.Add(new Song.Event()
+                                    midi.Events.Add(new Song.Event()
                                     {
                                         Type = Song.EventType.NoteOff,
                                         Note = note.Key,
@@ -337,7 +340,7 @@ namespace WaveSabreConvert
             }
 
             // sort note events
-            track.Events.Sort((a, b) =>
+            midi.Events.Sort((a, b) =>
             {
                 if (a.TimeStamp > b.TimeStamp) return 1;
                 if (a.TimeStamp < b.TimeStamp) return -1;
@@ -345,6 +348,8 @@ namespace WaveSabreConvert
                 if (a.Type == Song.EventType.NoteOff && b.Type == Song.EventType.NoteOn) return -1;
                 return 0;
             });
+
+            track.MidiEvents.Add(midi);
 
             // automations
             foreach (var flTrack in project.Tracks)

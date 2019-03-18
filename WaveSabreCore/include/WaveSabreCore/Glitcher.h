@@ -7,6 +7,8 @@
 #include "Envelope.h"
 #include "ReverseBuffer.h"
 #include "LFO.h"
+#include "SamplePlayer.h"
+#include "RecordBuffer.h"
 
 namespace WaveSabreCore
 {
@@ -20,10 +22,20 @@ namespace WaveSabreCore
 			GateSustain,
 			GateRelease,
 
+			FilterType,
 			FilterFreq,
-			FilterLfoAmount,
-			FilterLfoRateAdjust,
+			FilterQ,
 			FilterWave,
+			FilterLfoAmount,
+			FilterLfoRate,
+			FilterVeloRate,
+			FilterVeloAmount,
+			FilterTempoSync,
+			FilterLfoPhase,
+
+			RepeatLoopLength,
+			RepeatLoopMode,
+			RepeatPitch,
 
 			NumParams,
 		};
@@ -40,8 +52,9 @@ namespace WaveSabreCore
 			
 			// 2nd octave
 			Reverse = 48,
+			Repeat = 49,
 
-			// 3rd octave
+			// 3rd octave (effects bank)
 			AutoFilter = 60,
 		};
 
@@ -70,6 +83,8 @@ namespace WaveSabreCore
 			Envelope gateEnv;
 			BiquadFilter filter[2];
 			LFO lfo;
+			RecordBuffer recordBuffer[2];
+			SamplePlayer samplePlayer[2];
 		};
 	private:
 		float master;
@@ -78,9 +93,16 @@ namespace WaveSabreCore
 		float gateAttack, gateDecay, gateSustain, gateRelease;
 		
 		LFOWave filterWave;
-		float filterFreq;
-		float filterLfoAmount;
-		float filterLfoRateAdjust;
+		int filterType;
+		float filterFreq, filterQ;
+		float filterLfoAmount, filterLfoRate, filterLfoPhase;
+		float filterVeloRate, filterVeloAmount;
+		bool filterTempoSync;
+		float repeatLoopLength;
+		LoopMode repeatLoopMode;
+		float repeatPitch;
+
+		float calcLength(int velocity);
 
 		ReverseBuffer reverseLeft;
 		ReverseBuffer reverseRight;

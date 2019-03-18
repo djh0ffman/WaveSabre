@@ -31,9 +31,18 @@ namespace WaveSabreConvert
             public byte Velocity;
         }
 
+        class MidiDestination
+        {
+            public Song.Track Track;
+            public LiveProject.Device Device;
+        }
+
         Dictionary<LiveProject.Track, List<Receive>> trackReceives;
 
         List<LiveProject.Track> visitedTracks, orderedTracks;
+
+        double? minEventTime;
+        double? maxEventTime;
 
         public Song Process(LiveProject project, ILog logger)
         {
@@ -64,10 +73,9 @@ namespace WaveSabreConvert
             visitTrack(project.MasterTrack);
 
             var projectTracksToSongTracks = new Dictionary<LiveProject.Track, Song.Track>();
-            var songTrackEvents = new Dictionary<Song.Track, List<Event>>();
+            var songTrackEvents = new Dictionary<MidiDestination, List<Event>>();
 
-            double? minEventTime = null;
-            double? maxEventTime = null;
+            var deviceLink = new Dictionary<LiveProject.Device, Song.Device>();
 
             foreach (var projectTrack in orderedTracks)
             {
@@ -97,6 +105,7 @@ namespace WaveSabreConvert
                     else
                     {
                         track.Devices.Add(device);
+                        deviceLink.Add(projectDevice, device);  // store these for liking later
 
                         foreach (var floatParameter in projectDevice.FloatParameters)
                         {
@@ -121,69 +130,36 @@ namespace WaveSabreConvert
                     }
                 }
 
-                var events = new List<Event>();
-                foreach (var midiClip in projectTrack.MidiClips)
+                var events = ConvertEvents(projectTrack, project);
+                projectTracksToSongTracks.Add(projectTrack, track);
+
+                if (projectTrack.Devices.Count > 0)
                 {
-                    if (!midiClip.IsDisabled)
+                    var midiDest = new MidiDestination()
                     {
-                        var loopLength = midiClip.LoopEnd - midiClip.LoopStart;
-                        for (var currentTime = midiClip.CurrentStart; currentTime < midiClip.CurrentEnd; currentTime += loopLength)
+                        Track = track,
+                        Device = projectTrack.Devices[0]
+                    };
+                    songTrackEvents.Add(midiDest, events);
+                }
+
+                foreach (var findTrack in project.Tracks)
+                {
+                    if (findTrack.MidiDestinationTrack == projectTrack)
+                    {
+                        // FOUND IT
+                        events = new List<Event>();
+                        events = ConvertEvents(findTrack, project);
+                        var midiDest = new MidiDestination()
                         {
-                            foreach (var keyTrack in midiClip.KeyTracks)
-                            {
-                                foreach (var note in keyTrack.Notes)
-                                {
-                                    if (note.IsEnabled)
-                                    {
-                                        var startTime = note.Time - (currentTime - midiClip.CurrentStart) - midiClip.LoopStartRelative;
-                                        while (startTime < 0.0) startTime += loopLength;
-                                        startTime = currentTime + startTime - midiClip.LoopStart;
-                                        var endTime = startTime + note.Duration;
+                            Track = track,
+                            Device = findTrack.MidiDestinationDevice
+                        };
+                        songTrackEvents.Add(midiDest, events);
 
-                                        if ((startTime >= midiClip.CurrentStart && startTime < midiClip.CurrentEnd) &&
-                                            (!project.IsLoopOn || (
-                                                startTime >= project.LoopStart && startTime < projectLoopEnd)))
-                                        {
-                                            endTime = Math.Min(endTime, midiClip.CurrentEnd);
-                                            if (project.IsLoopOn) endTime = Math.Min(endTime, projectLoopEnd);
-                                            if (endTime > startTime)
-                                            {
-                                                var startEvent = new Event();
-                                                startEvent.Time = startTime;
-                                                startEvent.Type = Song.EventType.NoteOn;
-                                                startEvent.Note = (byte)keyTrack.MidiKey;
-                                                startEvent.Velocity = (byte)note.Velocity;
-                                                events.Add(startEvent);
-
-                                                var endEvent = new Event();
-                                                endEvent.Time = endTime;
-                                                endEvent.Type = Song.EventType.NoteOff;
-                                                endEvent.Note = (byte)keyTrack.MidiKey;
-                                                events.Add(endEvent);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
-                events.Sort((a, b) =>
-                    {
-                        if (a.Time > b.Time) return 1;
-                        if (a.Time < b.Time) return -1;
-                        if (a.Type == Song.EventType.NoteOn && b.Type == Song.EventType.NoteOff) return 1;
-                        if (a.Type == Song.EventType.NoteOff && b.Type == Song.EventType.NoteOn) return -1;
-                        return 0;
-                    });
-                foreach (var e in events)
-                {
-                    if (!minEventTime.HasValue || e.Time < minEventTime.Value) minEventTime = e.Time;
-                    if (!maxEventTime.HasValue || e.Time > maxEventTime.Value) maxEventTime = e.Time;
-                }
 
-                projectTracksToSongTracks.Add(projectTrack, track);
-                songTrackEvents.Add(track, events);
                 song.Tracks.Add(track);
             }
 
@@ -206,8 +182,17 @@ namespace WaveSabreConvert
 
             foreach (var kvp in songTrackEvents)
             {
-                var track = kvp.Key;
+                var midiDest = kvp.Key;
+                var track = midiDest.Track;
                 var events = kvp.Value;
+
+                var midiEvents = new Song.MidiEvents();
+                Song.Device device = null;
+                deviceLink.TryGetValue(midiDest.Device, out device);
+                if (device == null) throw new Exception("Unable to find midi destination device");
+                var deviceId = track.Devices.IndexOf(device);
+                if (deviceId < 0) throw new Exception("Unable to find midi destination device");
+                midiEvents.DeviceId = deviceId;
 
                 int lastTimeStamp = 0;
                 foreach (var e in events)
@@ -220,9 +205,10 @@ namespace WaveSabreConvert
                     songEvent.Type = e.Type;
                     songEvent.Note = e.Note;
                     songEvent.Velocity = e.Velocity;
-                    track.Events.Add(songEvent);
+                    midiEvents.Events.Add(songEvent);
                     lastTimeStamp = timeStamp;
                 }
+                track.MidiEvents.Add(midiEvents);
             }
 
             // TODO: Clip all of this instead of just offsetting
@@ -254,6 +240,74 @@ namespace WaveSabreConvert
             }
 
             return song;
+        }
+
+        List<Event> ConvertEvents(LiveProject.Track projectTrack, LiveProject project)
+        {
+            var projectLoopEnd = project.LoopStart + project.LoopLength;
+            var events = new List<Event>();
+            foreach (var midiClip in projectTrack.MidiClips)
+            {
+                if (!midiClip.IsDisabled)
+                {
+                    var loopLength = midiClip.LoopEnd - midiClip.LoopStart;
+                    for (var currentTime = midiClip.CurrentStart; currentTime < midiClip.CurrentEnd; currentTime += loopLength)
+                    {
+                        foreach (var keyTrack in midiClip.KeyTracks)
+                        {
+                            foreach (var note in keyTrack.Notes)
+                            {
+                                if (note.IsEnabled)
+                                {
+                                    var startTime = note.Time - (currentTime - midiClip.CurrentStart) - midiClip.LoopStartRelative;
+                                    while (startTime < 0.0) startTime += loopLength;
+                                    startTime = currentTime + startTime - midiClip.LoopStart;
+                                    var endTime = startTime + note.Duration;
+
+                                    if ((startTime >= midiClip.CurrentStart && startTime < midiClip.CurrentEnd) &&
+                                        (!project.IsLoopOn || (
+                                            startTime >= project.LoopStart && startTime < projectLoopEnd)))
+                                    {
+                                        endTime = Math.Min(endTime, midiClip.CurrentEnd);
+                                        if (project.IsLoopOn) endTime = Math.Min(endTime, projectLoopEnd);
+                                        if (endTime > startTime)
+                                        {
+                                            var startEvent = new Event();
+                                            startEvent.Time = startTime;
+                                            startEvent.Type = Song.EventType.NoteOn;
+                                            startEvent.Note = (byte)keyTrack.MidiKey;
+                                            startEvent.Velocity = (byte)note.Velocity;
+                                            events.Add(startEvent);
+
+                                            var endEvent = new Event();
+                                            endEvent.Time = endTime;
+                                            endEvent.Type = Song.EventType.NoteOff;
+                                            endEvent.Note = (byte)keyTrack.MidiKey;
+                                            events.Add(endEvent);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            events.Sort((a, b) =>
+            {
+                if (a.Time > b.Time) return 1;
+                if (a.Time < b.Time) return -1;
+                if (a.Type == Song.EventType.NoteOn && b.Type == Song.EventType.NoteOff) return 1;
+                if (a.Type == Song.EventType.NoteOff && b.Type == Song.EventType.NoteOn) return -1;
+                return 0;
+            });
+
+            foreach (var e in events)
+            {
+                if (!minEventTime.HasValue || e.Time < minEventTime.Value) minEventTime = e.Time;
+                if (!maxEventTime.HasValue || e.Time > maxEventTime.Value) maxEventTime = e.Time;
+            }
+
+            return events;
         }
 
         void visitTrack(LiveProject.Track projectTrack)

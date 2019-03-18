@@ -49,6 +49,15 @@ namespace WaveSabreCore
 				b2 = (1.0f + (float)Helpers::FastCos(w0)) / 2.0f;
 				break;
 
+			case BiquadFilterType::Bandpass:
+				a0 = 1.0f + alpha;
+				a1 = -2.0f * (float)Helpers::FastCos(w0);
+				a2 = 1.0f - alpha;
+				b0 = alpha;
+				b1 = 0.0f;
+				b2 = -alpha;
+				break;
+
 			case BiquadFilterType::Peak:
 				{
 					float A = Helpers::PowF(10.0f, gain / 40.0f);

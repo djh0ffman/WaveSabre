@@ -38,7 +38,7 @@ namespace WaveSabreConvert
 
             foreach (var track in song.Tracks)
             {
-                if (track.Events.Count > 0)
+                if (track.MidiEvents.Count > 0)
                 {
                     logger.WriteLine(string.Format("Converting track: {0}", track.Name));
                     insList.Add(CreateInstrument(track, trkIndex));

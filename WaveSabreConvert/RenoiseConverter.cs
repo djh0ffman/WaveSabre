@@ -352,7 +352,7 @@ namespace WaveSabreConvert
                     track.Volume = ((RenoiseInstrument)ins.InstrumentSource).PluginGenerator.Volume * project.GlobalSongData.GlobalTrackHeadroom;
                     PopulateInstrumentTrack(track, ins);
 
-                    if (track.Events.Count > 0)
+                    if (track.MidiEvents.Count > 0)
                     {
                         instrumentTracks.Add(track, project.Tracks.Items[ins.AssignedTrack]);
                     }
@@ -366,6 +366,8 @@ namespace WaveSabreConvert
 
         private void PopulateInstrumentTrack(Song.Track track, RnsIns instrument)
         {
+            var midi = new Song.MidiEvents();
+
             // specific track assign, midi can come from any track but audio must go to track
             if (instrument.AssignedTrack >= 0)
             {
@@ -374,7 +376,7 @@ namespace WaveSabreConvert
                 // loop each track for notes and collect any for this instrument
                 foreach (var notes in noteTracks)
                 {
-                    track.Events.AddRange(NotesToEvents(notes, instrument.InstrumentId));
+                    midi.Events.AddRange(NotesToEvents(notes, instrument.InstrumentId));
                 }
             }
             else
@@ -389,7 +391,7 @@ namespace WaveSabreConvert
                     {
                         trackId = noteTracks.IndexOf(notes);
                         instrument.AssignedTrack = trackId;
-                        track.Events.AddRange(events);
+                        midi.Events.AddRange(events);
                     }
                     else if (events.Count > 0)
                     {
@@ -406,6 +408,22 @@ namespace WaveSabreConvert
                 }
             }
 
+            // all collected, now sort the events as they could come from multiple tracks
+            midi.Events.Sort((a, b) =>
+            {
+                if (a.TimeStamp > b.TimeStamp) return 1;
+                if (a.TimeStamp < b.TimeStamp) return -1;
+                if (a.Type == Song.EventType.NoteOn && b.Type == Song.EventType.NoteOff) return 1;
+                if (a.Type == Song.EventType.NoteOff && b.Type == Song.EventType.NoteOn) return -1;
+                return 0;
+            });
+
+            // add the midi track if it contains notes
+            if (midi.Events.Count > 0)
+            {
+                track.MidiEvents.Add(midi);
+            }
+
             foreach (var auto in automationMaps)
             {
                 if (auto.AutoSource is RenoiseInstrument)
@@ -418,15 +436,6 @@ namespace WaveSabreConvert
                 }
             }
 
-            // all collected, now sort the events as they could come from multiple tracks
-            track.Events.Sort((a, b) =>
-            {
-                if (a.TimeStamp > b.TimeStamp) return 1;
-                if (a.TimeStamp < b.TimeStamp) return -1;
-                if (a.Type == Song.EventType.NoteOn && b.Type == Song.EventType.NoteOff) return 1;
-                if (a.Type == Song.EventType.NoteOff && b.Type == Song.EventType.NoteOn) return -1;
-                return 0;
-            });
         }
 
         private float GetTrackVolume(object trackDevice)
@@ -1186,16 +1195,23 @@ namespace WaveSabreConvert
                 rnsins.Name = instrument.Name;
                 rnsins.InstrumentId = insId;
 
-                // I "think" we look in two places here as we dual support old and new file formats
+                var aliasFx = "";
+                var aliasIns = -1;
+
+                //  we look in two places here as we dual support old and new file formats
                 AudioPluginDevice plug = null;
                 if (instrument.PluginGenerator != null)
                 {
                     plug = instrument.PluginGenerator.PluginDevice;
+                    aliasFx = instrument.PluginGenerator.AliasFxIndices;
+                    aliasIns = instrument.PluginGenerator.AliasInstrumentIndex;
                     rnsins.AssignedTrack = instrument.PluginGenerator.OutputRoutings.OutputRouting[0].AssignedTrack;
                 }
                 else if (instrument.PluginProperties != null)
                 {
                     plug = instrument.PluginProperties.PluginDevice;
+                    aliasFx = instrument.PluginProperties.AliasFxIndices;
+                    aliasIns = instrument.PluginProperties.AliasInstrumentIndex;
                     rnsins.AssignedTrack = instrument.PluginProperties.OutputRoutings.OutputRouting[0].AssignedTrack;
                 }
 
@@ -1222,7 +1238,16 @@ namespace WaveSabreConvert
                 }
                 else
                 {
-                    logger.WriteLine(string.Format("WARNING: Instrument [{0}] skipped (not a vst plugin)", instrumentName));
+                    // handling for alias instruments and effects...
+                    if (aliasIns == -1 && aliasFx == "-1,-1")
+                    {
+                        // neither in use, let them know
+                        logger.WriteLine(string.Format("WARNING: Instrument [{0}] skipped (not a vst plugin)", instrumentName));
+                    }
+                    else
+                    {
+                        logger.WriteLine("HELLO!");
+                    }
                 }
 
                 instruments.Add(rnsins);

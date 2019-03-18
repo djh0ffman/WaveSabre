@@ -33,6 +33,7 @@
     <ClInclude Include="include\WaveSabreCore\Leveller.h" />
     <ClInclude Include="include\WaveSabreCore\LFO.h" />
     <ClInclude Include="include\WaveSabreCore\MxcsrFlagGuard.h" />
+    <ClInclude Include="include\WaveSabreCore\RecordBuffer.h" />
     <ClInclude Include="include\WaveSabreCore\ReverseBuffer.h" />
     <ClInclude Include="include\WaveSabreCore\ResampleBuffer.h" />
     <ClInclude Include="include\WaveSabreCore\SamplePlayer.h" />
@@ -66,6 +67,7 @@
     <ClCompile Include="src\Leveller.cpp" />
     <ClCompile Include="src\LFO.cpp" />
     <ClCompile Include="src\MxcsrFlagGuard.cpp" />
+    <ClCompile Include="src\RecordBuffer.cpp" />
     <ClCompile Include="src\ReverseBuffer.cpp" />
     <ClCompile Include="src\ResampleBuffer.cpp" />
     <ClCompile Include="src\SamplePlayer.cpp" />

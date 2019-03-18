@@ -31,6 +31,13 @@ namespace WaveSabreConvert
             public List<Event> Events = new List<Event>();
         }
 
+        public class MidiRouting
+        {
+            public Track MidiSource;
+            public Track Destination;
+            public Device DestinationDevice;
+        }
+
         public class Device
         {
             public string Id;
@@ -72,6 +79,8 @@ namespace WaveSabreConvert
             public List<Device> Devices = new List<Device>();
             public List<MidiClip> MidiClips = new List<MidiClip>();
             public string TrackGroupId;
+            public Track MidiDestinationTrack;
+            public Device MidiDestinationDevice;
         }
 
         public List<Track> Tracks = new List<Track>();

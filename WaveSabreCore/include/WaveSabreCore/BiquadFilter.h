@@ -7,6 +7,7 @@ namespace WaveSabreCore
 	{
 		Lowpass,
 		Highpass,
+		Bandpass,
 		Peak,
 	};
 

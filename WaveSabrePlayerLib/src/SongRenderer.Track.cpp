@@ -34,7 +34,18 @@ namespace WaveSabrePlayerLib
 			}
 		}
 
-		midiLaneId = songRenderer->readInt();
+		numMidiSends = songRenderer->readInt();
+		if (numMidiSends)
+		{
+			midiSends = new MidiSend[numMidiSends];
+			for (int i = 0; i < numMidiSends; i++)
+			{
+				midiSends[i].MidiLaneId = songRenderer->readInt();
+				midiSends[i].DeviceId = songRenderer->readInt();
+				midiSends[i].AccumEventTimestamp = 0;
+				midiSends[i].EventIndex = 0;
+			}
+		}
 
 		numAutomations = songRenderer->readInt();
 		if (numAutomations)
@@ -48,8 +59,6 @@ namespace WaveSabrePlayerLib
 		}
 
 		lastSamplePos = 0;
-		accumEventTimestamp = 0;
-		eventIndex = 0;
 	}
 
 	SongRenderer::Track::~Track()
@@ -71,25 +80,27 @@ namespace WaveSabrePlayerLib
 
 	void SongRenderer::Track::Run(int numSamples)
 	{
-		MidiLane* lane = songRenderer->midiLanes[midiLaneId];
-		for ( ; eventIndex < lane->numEvents; eventIndex++)
+		for (int s = 0; s < numMidiSends; s++)
 		{
-			Event *e = &lane->events[eventIndex];
-			int samplesToEvent = accumEventTimestamp + e->TimeStamp - lastSamplePos;
-			if (samplesToEvent >= numSamples) break;
-			switch (e->Type)
+			MidiLane* lane = songRenderer->midiLanes[midiSends[s].MidiLaneId];
+			for (; midiSends[s].EventIndex < lane->numEvents; midiSends[s].EventIndex++)
 			{
-			case EventType::NoteOn:
-				for (int i = 0; i < numDevices; i++) songRenderer->devices[devicesIndicies[i]]->NoteOn(e->Note, e->Velocity, samplesToEvent);
-				break;
+				Event *e = &lane->events[midiSends[s].EventIndex];
+				int samplesToEvent = midiSends[s].AccumEventTimestamp + e->TimeStamp - lastSamplePos;
+				if (samplesToEvent >= numSamples) break;
+				switch (e->Type)
+				{
+				case EventType::NoteOn:
+					songRenderer->devices[devicesIndicies[midiSends[s].DeviceId]]->NoteOn(e->Note, e->Velocity, samplesToEvent);
+					break;
 
-			case EventType::NoteOff:
-				for (int i = 0; i < numDevices; i++) songRenderer->devices[devicesIndicies[i]]->NoteOff(e->Note, samplesToEvent);
-				break;
+				case EventType::NoteOff:
+					songRenderer->devices[devicesIndicies[midiSends[s].DeviceId]]->NoteOff(e->Note, samplesToEvent);
+					break;
+				}
+				midiSends[s].AccumEventTimestamp += e->TimeStamp;
 			}
-			accumEventTimestamp += e->TimeStamp;
 		}
-
 		for (int i = 0; i < numAutomations; i++) automations[i]->Run(numSamples);
 
 		for (int i = 0; i < numBuffers; i++) memset(Buffers[i], 0, numSamples * sizeof(float));

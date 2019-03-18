@@ -89,12 +89,12 @@ namespace WaveSabreConvert
             public float Volume;
             public List<Receive> Receives = new List<Receive>();
             public List<Device> Devices = new List<Device>();
-            public List<Event> Events = new List<Event>();
+            public List<MidiEvents> MidiEvents = new List<MidiEvents>();
             public List<Automation> Automations = new List<Automation>();
             /// <summary>
             /// Auto populated by converter, do not populate
             /// </summary>
-            public List<DeltaCodedEvent> DeltaCodedEvents = new List<DeltaCodedEvent>();
+            public List<DeltaCodedMidiEvents> DeltaCodedEvents = new List<DeltaCodedMidiEvents>();
             /// <summary>
             /// Auto populated by converter, do not populate
             /// </summary>
@@ -102,8 +102,8 @@ namespace WaveSabreConvert
             /// <summary>
             /// Auto populated by converter, do not populate
             /// </summary>
-            public int MidiLaneId;
-            
+            public List<MidiSend> MidiSends = new List<MidiSend>();
+
             public int DataSize;
 
             public override string ToString()
@@ -112,6 +112,24 @@ namespace WaveSabreConvert
             }
         }
 
+        public class MidiEvents
+        {
+            public int DeviceId;
+            public List<Event> Events = new List<Event>();
+        }
+        
+        public class MidiSend
+        {
+            public int DeviceId;
+            public int MidiLaneId;
+        }
+
+        public class DeltaCodedMidiEvents
+        {
+            public int DeviceId;
+            public List<DeltaCodedEvent> MidiEvents = new List<DeltaCodedEvent>();
+        }
+        
         public class MidiLane
         {
             public List<DeltaCodedEvent> MidiEvents = new List<DeltaCodedEvent>();
@@ -180,8 +198,12 @@ namespace WaveSabreConvert
             // create midi lanes from tracks and index them
             foreach (var t in Tracks)
             {
-                var midiLane = new MidiLane() { MidiEvents = t.DeltaCodedEvents };
-                t.MidiLaneId = AddMidiLane(midiLane);
+                foreach (var dce in t.DeltaCodedEvents)
+                {
+                    var midiLane = new MidiLane() { MidiEvents = dce.MidiEvents };
+                    var midiLaneId = AddMidiLane(midiLane);
+                    t.MidiSends.Add(new MidiSend() { DeviceId = dce.DeviceId, MidiLaneId = midiLaneId });
+                }
             }
 
             if (midiLaneDupes > 0)
@@ -245,18 +267,25 @@ namespace WaveSabreConvert
                     }
                 }
 
-                lastTime = 0; 
-                foreach (var e in t.Events)
+                foreach (var midi in t.MidiEvents)
                 {
-                    t.DeltaCodedEvents.Add(new DeltaCodedEvent()
-                    {
-                        TimeFromLastEvent = e.TimeStamp - lastTime,
-                        Type = e.Type,
-                        Note = e.Note,
-                        Velocity = e.Velocity
-                    });
+                    lastTime = 0;
+                    var dce = new DeltaCodedMidiEvents();
+                    dce.DeviceId = midi.DeviceId;
 
-                    lastTime = e.TimeStamp;
+                    foreach (var e in midi.Events)
+                    {
+                        dce.MidiEvents.Add(new DeltaCodedEvent()
+                        {
+                            TimeFromLastEvent = e.TimeStamp - lastTime,
+                            Type = e.Type,
+                            Note = e.Note,
+                            Velocity = e.Velocity
+                        });
+
+                        lastTime = e.TimeStamp;
+                    }
+                    t.DeltaCodedEvents.Add(dce);
                 }
             }
         }

@@ -44,7 +44,8 @@ namespace WaveSabreCore
 	float ReverseBuffer::ReadSample()
 	{
 		float sample = buffer[playbackPostion];
-		playbackPostion = (playbackPostion - 1) % length;
+		playbackPostion--;
+		if (playbackPostion < 0) playbackPostion = length;
 		return sample;
 	}
 }

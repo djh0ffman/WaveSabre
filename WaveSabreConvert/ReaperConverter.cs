@@ -165,11 +165,14 @@ namespace WaveSabreConvert
                 var lastEvent = 0;
                 foreach (var t in song.Tracks)
                 {
-                    if (t.Events.Count > 0)
+                    foreach (var m in t.MidiEvents)
                     {
-                        var thisLastEvent = t.Events.Max(e => e.TimeStamp);
-                        if (thisLastEvent > lastEvent)
-                            lastEvent = thisLastEvent;
+                        if (m.Events.Count > 0)
+                        {
+                            var thisLastEvent = m.Events.Max(e => e.TimeStamp);
+                            if (thisLastEvent > lastEvent)
+                                lastEvent = thisLastEvent;
+                        }
                     }
                 }
                 song.Length = (double)lastEvent / (double)project.SampleRate;
@@ -247,7 +250,10 @@ namespace WaveSabreConvert
                     track.Automations.Add(ConvertAutomation(a, deviceIndex, reaperTrack.TrackName));
                 }
 
-                track.Events = ConvertMidi(reaperTrack.MediaItems);
+                var midi = new Song.MidiEvents();
+                midi.DeviceId = 0;
+                midi.Events = ConvertMidi(reaperTrack.MediaItems);
+                track.MidiEvents.Add(midi);
             }
 
             return track;

@@ -95,6 +95,14 @@ namespace WaveSabrePlayerLib
 				float Volume;
 			} Receive;
 
+			typedef struct
+			{
+				int MidiLaneId;
+				int DeviceId;
+				int AccumEventTimestamp;
+				int EventIndex;
+			} MidiSend;
+
 			class Automation
 			{
 			public:
@@ -130,14 +138,13 @@ namespace WaveSabrePlayerLib
 			int numDevices;
 			int *devicesIndicies;
 
-			int midiLaneId;
+			int numMidiSends;
+			MidiSend *midiSends;
 
 			int numAutomations;
 			Automation **automations;
 
 			int lastSamplePos;
-			int accumEventTimestamp;
-			int eventIndex;
 		};
 
 		// TODO: Templatize? Might actually be bigger..
