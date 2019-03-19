@@ -21,6 +21,7 @@ namespace WaveSabreConvert
         private Dictionary<Song.Track, object> instrumentTracks;
         private List<List<RnsPatternLineNode>> noteTracks;
         private List<RnsAutoMap> automationMaps;
+        private List<RnsLink> midiLinks;
 
         class RnsPatternLineNode : PatternLineNode 
         {
@@ -68,6 +69,14 @@ namespace WaveSabreConvert
                 ReceivingChannelIndex = receivingChannelIndex;
                 Volume = volume;
             }
+        }
+
+        class RnsLink
+        {
+            public RenoiseInstrument Instrument { get; set; }
+            public RenoiseInstrument AliasInstrument { get; set; }
+            public object AliasTrack { get; set; }
+            public object AliasDevice { get; set; }
         }
 
         public Song Process(RenoiseSong project, ILog logger)
@@ -366,7 +375,7 @@ namespace WaveSabreConvert
 
         private void PopulateInstrumentTrack(Song.Track track, RnsIns instrument)
         {
-            var midi = new Song.MidiEvents();
+            var midiLanes = new List<Song.MidiEvents>();
 
             // specific track assign, midi can come from any track but audio must go to track
             if (instrument.AssignedTrack >= 0)
@@ -374,15 +383,46 @@ namespace WaveSabreConvert
                 List<Song.Event> events = new List<Song.Event>();
 
                 // loop each track for notes and collect any for this instrument
+                var midi = new Song.MidiEvents();
+                midi.DeviceId = 0;
                 foreach (var notes in noteTracks)
                 {
                     midi.Events.AddRange(NotesToEvents(notes, instrument.InstrumentId));
+                }
+
+                if (midi.Events.Count > 0)
+                {
+                    MidiSort(midi.Events);
+                    midiLanes.Add(midi);
+                }
+
+                // collate any virtual instruments
+                foreach (var midiLink in midiLinks)
+                {
+                    if (midiLink.AliasInstrument == instrument.InstrumentSource)
+                    {
+                        var instrumentId = project.Instruments.Instrument.ToList().IndexOf(midiLink.Instrument);
+                        midi = new Song.MidiEvents();
+                        midi.DeviceId = 0;
+                        foreach (var notes in noteTracks)
+                        {
+                            midi.Events.AddRange(NotesToEvents(notes, instrumentId));
+                        }
+
+                        if (midi.Events.Count > 0)
+                        {                    
+                            MidiSort(midi.Events);
+                            midiLanes.Add(midi);
+                        }
+                    }
                 }
             }
             else
             {
                 // no specific track, so find first track with instrument id and warn that the rest are ignored
                 var trackId = -1;
+                var midi = new Song.MidiEvents();
+                midi.DeviceId = 0;
 
                 foreach (var notes in noteTracks)
                 {
@@ -392,6 +432,11 @@ namespace WaveSabreConvert
                         trackId = noteTracks.IndexOf(notes);
                         instrument.AssignedTrack = trackId;
                         midi.Events.AddRange(events);
+                        if (midi.Events.Count > 0)
+                        {                    
+                            MidiSort(midi.Events);
+                            midiLanes.Add(midi);
+                        }
                     }
                     else if (events.Count > 0)
                     {
@@ -408,21 +453,8 @@ namespace WaveSabreConvert
                 }
             }
 
-            // all collected, now sort the events as they could come from multiple tracks
-            midi.Events.Sort((a, b) =>
-            {
-                if (a.TimeStamp > b.TimeStamp) return 1;
-                if (a.TimeStamp < b.TimeStamp) return -1;
-                if (a.Type == Song.EventType.NoteOn && b.Type == Song.EventType.NoteOff) return 1;
-                if (a.Type == Song.EventType.NoteOff && b.Type == Song.EventType.NoteOn) return -1;
-                return 0;
-            });
-
-            // add the midi track if it contains notes
-            if (midi.Events.Count > 0)
-            {
-                track.MidiEvents.Add(midi);
-            }
+            // add the midi tracks
+            track.MidiEvents = midiLanes;
 
             foreach (var auto in automationMaps)
             {
@@ -435,7 +467,18 @@ namespace WaveSabreConvert
                     }
                 }
             }
+        }
 
+        private void MidiSort(List<Song.Event> events)
+        {
+            events.Sort((a, b) =>
+            {
+                if (a.TimeStamp > b.TimeStamp) return 1;
+                if (a.TimeStamp < b.TimeStamp) return -1;
+                if (a.Type == Song.EventType.NoteOn && b.Type == Song.EventType.NoteOff) return 1;
+                if (a.Type == Song.EventType.NoteOff && b.Type == Song.EventType.NoteOn) return -1;
+                return 0;
+            });
         }
 
         private float GetTrackVolume(object trackDevice)
@@ -771,6 +814,46 @@ namespace WaveSabreConvert
                 }
             }
             
+            // add midi for effect devices
+            foreach (var link in midiLinks)
+            {
+                if (trackObject == link.AliasTrack)
+                {
+                    Song.Device targetDevice = null;
+                    foreach (var device in devices)
+                    {
+                        if (device.DeviceSource == link.AliasDevice)
+                        {
+                            targetDevice = (Song.Device)device.Device;
+                            break;
+                        }
+                    }
+
+                    if (targetDevice == null)
+                    {
+                        logger.WriteLine("WARNING: Unable to find target device");
+                    }
+                    else
+                    {
+                        var deviceIndex = songTrack.Devices.IndexOf(targetDevice);
+                        var instrumentId = project.Instruments.Instrument.ToList().IndexOf(link.Instrument);
+
+                        var midi = new Song.MidiEvents();
+                        midi.DeviceId = deviceIndex;
+                        foreach (var notes in noteTracks)
+                        {
+                            midi.Events.AddRange(NotesToEvents(notes, instrumentId));
+                        }
+
+                        if (midi.Events.Count > 0)
+                        {
+                            MidiSort(midi.Events);
+                            songTrack.MidiEvents.Add(midi);
+                        }
+                    }
+                }
+            }
+
             foreach (var auto in automationMaps)
             {
                 if (auto.AutoSource == trackObject)
@@ -1187,6 +1270,7 @@ namespace WaveSabreConvert
         private void GetInstruments()
         {
             instruments = new List<RnsIns>();
+            midiLinks = new List<RnsLink>();
             int insId = 0;
 
             foreach (var instrument in project.Instruments.Instrument)
@@ -1246,7 +1330,24 @@ namespace WaveSabreConvert
                     }
                     else
                     {
-                        logger.WriteLine("HELLO!");
+                        // log instrument and effect links
+                        var midiLink = new RnsLink();
+                        midiLink.Instrument = instrument;
+                        if (aliasIns >= 0)
+                        {
+                            midiLink.AliasInstrument = project.Instruments.Instrument[aliasIns];
+                        }
+                        if (aliasFx != "-1,-1")
+                        {
+                            var splits = aliasFx.Split(',');
+                            var trackId = Convert.ToInt32(splits[0]);
+                            var deviceId = Convert.ToInt32(splits[1]);
+                            var track = project.Tracks.Items[trackId];
+                            var devices = (TrackFilterDeviceChain)GetProp("FilterDevices", track);
+                            midiLink.AliasTrack = track;
+                            midiLink.AliasDevice = devices.Devices.Items[deviceId];
+                        }
+                        midiLinks.Add(midiLink);
                     }
                 }
 
