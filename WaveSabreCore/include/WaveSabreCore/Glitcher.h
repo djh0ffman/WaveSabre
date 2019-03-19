@@ -42,20 +42,19 @@ namespace WaveSabreCore
 
 		enum class GlitchMode
 		{
+			// non-key specific functions
+			Repeat = -2,
 			DrySignal = -1,
-
 			// 1st octave
 			DryOn = 36,
 			DryOff = 37,
 			ManualGate = 38,
 			AutoGate = 39,
-			
+			AutoFilter = 40,
 			// 2nd octave
-			Reverse = 48,
-			Repeat = 49,
-
-			// 3rd octave (effects bank)
-			AutoFilter = 60,
+			Reverse = 47,
+			RepeatNoteLow = 48,
+			RepeatNoteHigh = 64,
 		};
 
 		Glitcher();
@@ -102,7 +101,7 @@ namespace WaveSabreCore
 		LoopMode repeatLoopMode;
 		float repeatPitch;
 
-		float calcLength(int velocity);
+		float calcRepeatLength(int velocity);
 
 		ReverseBuffer reverseLeft;
 		ReverseBuffer reverseRight;

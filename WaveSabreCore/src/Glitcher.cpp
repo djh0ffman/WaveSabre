@@ -43,16 +43,15 @@ namespace WaveSabreCore
 		master = 1.0f;
 	}
 
-	float Glitcher::calcLength(int velocity)
+	float Glitcher::calcRepeatLength(int rate)
 	{
 		double delayScalar = 120.0 / (double)Helpers::CurrentTempo / 64.0 * 1000.0;
-		velocity = velocity / 8;
-		if (velocity % 2 == 0)
+		if (rate % 2 == 0)
 			delayScalar = delayScalar * 2 / 3;
 		else
-			velocity--;
-		velocity = (velocity / 2) + 1;
-		float bufferLength = (float)(delayScalar * (1<<velocity));
+			rate--;
+		rate = (rate / 2) + 1;
+		float bufferLength = (float)(delayScalar * (1 << rate));
 		return bufferLength;
 	}
 
@@ -149,7 +148,15 @@ namespace WaveSabreCore
 
 	void Glitcher::GlitcherVoice::NoteOn(int note, int velocity, float detune, float pan)
 	{
-		glitchMode = GlitchMode(note);
+		// check note for repeat
+		if (note >= (int)GlitchMode::RepeatNoteLow && note <= (int)GlitchMode::RepeatNoteHigh)
+		{
+			glitchMode = GlitchMode::Repeat;
+		}
+		else
+		{
+			glitchMode = GlitchMode(note);
+		}
 
 		gateEnv.Attack = glitcher->gateAttack;
 		gateEnv.Decay = glitcher->gateDecay;
@@ -184,7 +191,7 @@ namespace WaveSabreCore
 		case GlitchMode::Repeat: 
 			for (int i = 0; i < 2; i++)
 			{
-				recordBuffer[i].SetLength(glitcher->calcLength(velocity));
+				recordBuffer[i].SetLength(glitcher->calcLength(note - (int)GlitchMode::RepeatNoteLow));
 
 				samplePlayer[i].SampleData = recordBuffer[i].GetBuffer();
 				samplePlayer[i].SampleLength = recordBuffer[i].GetLength();
