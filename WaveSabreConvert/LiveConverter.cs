@@ -186,29 +186,34 @@ namespace WaveSabreConvert
                 var track = midiDest.Track;
                 var events = kvp.Value;
 
-                var midiEvents = new Song.MidiEvents();
-                Song.Device device = null;
-                deviceLink.TryGetValue(midiDest.Device, out device);
-                if (device == null) throw new Exception("Unable to find midi destination device");
-                var deviceId = track.Devices.IndexOf(device);
-                if (deviceId < 0) throw new Exception("Unable to find midi destination device");
-                midiEvents.DeviceId = deviceId;
-
-                int lastTimeStamp = 0;
-                foreach (var e in events)
+                if (events.Count > 0)
                 {
-                    var songEvent = new Song.Event();
-                    var time = e.Time - songStartTime;
-                    int timeStamp = Math.Max(secondsToSamples(time, (double)song.Tempo, (double)song.SampleRate), lastTimeStamp);
+                    var midiEvents = new Song.MidiEvents();
+                    Song.Device device = null;
+                    deviceLink.TryGetValue(midiDest.Device, out device);
+                    if (device == null)
+                        throw new Exception("Unable to find midi destination device");
+                    var deviceId = track.Devices.IndexOf(device);
+                    if (deviceId < 0)
+                        throw new Exception("Unable to find midi destination device");
+                    midiEvents.DeviceId = deviceId;
 
-                    songEvent.TimeStamp = secondsToSamples(time, (double) song.Tempo, (double) song.SampleRate);
-                    songEvent.Type = e.Type;
-                    songEvent.Note = e.Note;
-                    songEvent.Velocity = e.Velocity;
-                    midiEvents.Events.Add(songEvent);
-                    lastTimeStamp = timeStamp;
+                    int lastTimeStamp = 0;
+                    foreach (var e in events)
+                    {
+                        var songEvent = new Song.Event();
+                        var time = e.Time - songStartTime;
+                        int timeStamp = Math.Max(secondsToSamples(time, (double)song.Tempo, (double)song.SampleRate), lastTimeStamp);
+
+                        songEvent.TimeStamp = secondsToSamples(time, (double)song.Tempo, (double)song.SampleRate);
+                        songEvent.Type = e.Type;
+                        songEvent.Note = e.Note;
+                        songEvent.Velocity = e.Velocity;
+                        midiEvents.Events.Add(songEvent);
+                        lastTimeStamp = timeStamp;
+                    }
+                    track.MidiEvents.Add(midiEvents);
                 }
-                track.MidiEvents.Add(midiEvents);
             }
 
             // TODO: Clip all of this instead of just offsetting

@@ -191,7 +191,7 @@ namespace WaveSabreCore
 		case GlitchMode::Repeat: 
 			for (int i = 0; i < 2; i++)
 			{
-				recordBuffer[i].SetLength(glitcher->calcLength(note - (int)GlitchMode::RepeatNoteLow));
+				recordBuffer[i].SetLength(glitcher->calcRepeatLength(note - (int)GlitchMode::RepeatNoteLow));
 
 				samplePlayer[i].SampleData = recordBuffer[i].GetBuffer();
 				samplePlayer[i].SampleLength = recordBuffer[i].GetLength();
