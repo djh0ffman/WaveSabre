@@ -27,6 +27,7 @@
     <ClInclude Include="include\WaveSabreCore\Echo.h" />
     <ClInclude Include="include\WaveSabreCore\Envelope.h" />
     <ClInclude Include=".\include\WaveSabreCore\BiquadFilter.h" />
+    <ClInclude Include="include\WaveSabreCore\GainReduction.h" />
     <ClInclude Include="include\WaveSabreCore\GmDls.h" />
     <ClInclude Include="include\WaveSabreCore\Helpers.h" />
     <ClInclude Include="include\WaveSabreCore\Leveller.h" />
@@ -57,6 +58,7 @@
     <ClCompile Include="src\Echo.cpp" />
     <ClCompile Include="src\Envelope.cpp" />
     <ClCompile Include=".\src\BiquadFilter.cpp" />
+    <ClCompile Include="src\GainReduction.cpp" />
     <ClCompile Include="src\GmDls.cpp" />
     <ClCompile Include="src\Helpers.cpp" />
     <ClCompile Include="src\Leveller.cpp" />

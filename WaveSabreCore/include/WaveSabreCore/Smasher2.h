@@ -3,6 +3,7 @@
 
 #include "Device.h"
 #include "DelayBuffer.h"
+#include "GainReduction.h"
 
 namespace WaveSabreCore
 {
@@ -33,11 +34,15 @@ namespace WaveSabreCore
 	private:
 		const static float lookaheadMs;
 
+		
+
 		bool sidechain;
 		float inputGain;
 		float threshold, ratio;
 		float attack, release;
 		float outputGain;
+
+		GainReduction compressor;
 
 		DelayBuffer leftBuffer;
 		DelayBuffer rightBuffer;

@@ -69,6 +69,8 @@ namespace WaveSabreCore
 		static Spread ParamToSpread(float param);
 		static float SpreadToParam(Spread spread);
 
+		static float Min(float a, float b);
+		static float Max(float a, float b);
 	private:
 		static const int fastCosTabLog2Size = 9; // size = 512
 		static const int fastCosTabSize = (1 << fastCosTabLog2Size);

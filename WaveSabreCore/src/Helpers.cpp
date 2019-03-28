@@ -355,4 +355,20 @@ namespace WaveSabreCore
 	{
 		return (float)spread / 2.0f;
 	}
+
+	float Helpers::Min(float a, float b)
+	{
+		if (a > b)
+			return b;
+		else
+			return a;
+	}
+
+	float Helpers::Max(float a, float b)
+	{
+		if (a > b)
+			return a;
+		else
+			return b;
+	}
 }

@@ -40,29 +40,17 @@ namespace WaveSabreCore
 
 		float thresholdScalar = Helpers::DbToScalar(threshold);
 
+		compressor.UpdateCurve();
+
 		for (int i = 0; i < numSamples; i++)
 		{
 			leftBuffer.WriteSample(inputs[0][i] * inputGainScalar);
 			rightBuffer.WriteSample(inputs[1][i] * inputGainScalar);
+
 			float inputLeft = inputs[inputChannelOffset][i] * inputGainScalar;
 			float inputRight = inputs[inputChannelOffset + 1][i] * inputGainScalar;
-			float inputLeftLevel = fabsf(inputLeft);
-			float inputRightLevel = fabsf(inputRight);
-			float inputLevel = inputLeftLevel >= inputRightLevel ? inputLeftLevel : inputRightLevel;
 
-			if (inputLevel > peak)
-			{
-				peak += attackScalar;
-				if (peak > inputLevel) peak = inputLevel;
-			}
-			else
-			{
-				peak -= releaseScalar;
-				if (peak < inputLevel) peak = inputLevel;
-			}
-
-			float gainScalar = outputGainScalar;
-			if (peak > thresholdScalar) gainScalar *= (thresholdScalar + (peak - thresholdScalar) / ratio) / peak;
+			compressor.Process(inputLeft, inputRight);
 
 			outputs[0][i] = leftBuffer.ReadSample() * gainScalar;
 			outputs[1][i] = rightBuffer.ReadSample() * gainScalar;

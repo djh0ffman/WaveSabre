@@ -89,6 +89,9 @@
     <ClInclude Include="include\WaveSabreCore\Smasher2.h">
       <Filter>WaveSabreCore\Devices</Filter>
     </ClInclude>
+    <ClInclude Include="include\WaveSabreCore\GainReduction.h">
+      <Filter>WaveSabreCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="WaveSabreCore">
@@ -182,6 +185,9 @@
     </ClCompile>
     <ClCompile Include="src\Smasher2.cpp">
       <Filter>WaveSabreCore\Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GainReduction.cpp">
+      <Filter>WaveSabreCore</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
