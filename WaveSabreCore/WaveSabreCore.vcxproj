@@ -35,6 +35,7 @@
     <ClInclude Include="include\WaveSabreCore\SamplePlayer.h" />
     <ClInclude Include="include\WaveSabreCore\Slaughter.h" />
     <ClInclude Include="include\WaveSabreCore\Smasher.h" />
+    <ClInclude Include="include\WaveSabreCore\Smasher2.h" />
     <ClInclude Include="include\WaveSabreCore\Specimen.h" />
     <ClInclude Include="include\WaveSabreCore\StateVariableFilter.h" />
     <ClInclude Include="include\WaveSabreCore\SynthDevice.h" />
@@ -64,6 +65,7 @@
     <ClCompile Include="src\SamplePlayer.cpp" />
     <ClCompile Include="src\Slaughter.cpp" />
     <ClCompile Include="src\Smasher.cpp" />
+    <ClCompile Include="src\Smasher2.cpp" />
     <ClCompile Include="src\Specimen.cpp" />
     <ClCompile Include="src\StateVariableFilter.cpp" />
     <ClCompile Include="src\SynthDevice.cpp" />
