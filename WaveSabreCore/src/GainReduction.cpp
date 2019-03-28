@@ -7,15 +7,15 @@ namespace WaveSabreCore
 {
 	GainReduction::GainReduction()
 	{
-		linSlope = 0.f;
+		recalc = true;
+
+		linSlope = 0.0f;
 		attack = -1;
 		release = -1;
-		detection = -1;
-		stereo_link = -1;
 		threshold = -1;
 		ratio = -1;
 		knee = -1;
-		makeup = -1;
+		rms = true;
 	}
 
 	GainReduction::~GainReduction()
@@ -33,7 +33,39 @@ namespace WaveSabreCore
 		this->release = release;
 	}
 
-	void GainReduction::UpdateCurve()
+	void GainReduction::SetThreshold(float threshold)
+	{
+		if (this->threshold != threshold)
+		{
+			this->threshold = threshold;
+			recalc = true;
+		}
+	}
+
+	void GainReduction::SetRatio(float ratio)
+	{
+		if (this->ratio != ratio)
+		{
+			this->ratio = ratio;
+			recalc = true;
+		}
+	}
+
+	void GainReduction::SetKnee(float knee)
+	{
+		if (this->knee != knee)
+		{
+			this->knee = knee;
+			recalc = true;
+		}
+	}
+
+	void GainReduction::SetRms(bool rms)
+	{
+		this->rms = rms;
+	}
+
+	void GainReduction::updateCurve()
 	{
 		float linThreshold = threshold;
 		float linKneeSqrt = sqrt(knee);
@@ -46,34 +78,34 @@ namespace WaveSabreCore
 		compressedKneeStop = (kneeStop - thres) / ratio + thres;
 	}
 
-	void GainReduction::Process(float &left, float &right)
+	void GainReduction::Process(float &left, float &right, float &detLeft, float &detRight)
 	{
-		float gain = 1.f;
+		if (recalc)
+		{
+			updateCurve();
+			recalc = false;
+		}
+
+		float gain = 1.0f;
 		
-		bool rms = (detection == 0);
-		bool average = (stereo_link == 0);
+		bool average = false;
 		float attack_coeff = Helpers::Min(1.f, 1.f / (attack * (float)Helpers::CurrentSampleRate / 4000.f));
 		float release_coeff = Helpers::Min(1.f, 1.f / (release * (float)Helpers::CurrentSampleRate / 4000.f));
 		
-		float absample = average ? (fabs(left) + fabs(right)) * 0.5f : Helpers::Max(fabs(left), fabs(right));
+		float absample = average ? (fabs(detLeft) + fabs(detRight)) * 0.5f : Helpers::Max(fabs(detLeft), fabs(detRight));
 		if (rms) absample *= absample;
 
 		linSlope += (absample - linSlope) * (absample > linSlope ? attack_coeff : release_coeff);
 
 		if (linSlope > 0.f) 
 		{
-			gain = outputGain(linSlope, rms);
+			gain = outputGain(linSlope);
 		}
-		left *= gain * makeup;
-		right *= gain * makeup;
-
-		// used for meter gui
-		//meter_out = std::max(fabs(left), fabs(right));;
-		//meter_comp = gain;
-		//detected = rms ? sqrt(linSlope) : linSlope;
+		left *= gain;
+		right *= gain;
 	}
 
-	float GainReduction::outputGain(float linSlope, bool rms) const
+	float GainReduction::outputGain(float linSlope) const
 	{
 		//this calculation is also thor's work
 		if (linSlope > (rms ? adjKneeStart : linKneeStart)) 

@@ -27,6 +27,8 @@ void Smasher2Vst::getParameterName(VstInt32 index, char *text)
 	case Smasher2::ParamIndices::Attack: vst_strncpy(text, "Attack", kVstMaxParamStrLen); break;
 	case Smasher2::ParamIndices::Release: vst_strncpy(text, "Release", kVstMaxParamStrLen); break;
 	case Smasher2::ParamIndices::OutputGain: vst_strncpy(text, "Out Gain", kVstMaxParamStrLen); break;
+	case Smasher2::ParamIndices::Knee: vst_strncpy(text, "Knee", kVstMaxParamStrLen); break;
+	case Smasher2::ParamIndices::Rms: vst_strncpy(text, "Rms", kVstMaxParamStrLen); break;
 	}
 }
 

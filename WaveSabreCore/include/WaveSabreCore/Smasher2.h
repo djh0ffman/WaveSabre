@@ -19,6 +19,8 @@ namespace WaveSabreCore
 			Attack,
 			Release,
 			OutputGain,
+			Knee,
+			Rms,
 
 			NumParams,
 		};
@@ -38,9 +40,10 @@ namespace WaveSabreCore
 
 		bool sidechain;
 		float inputGain;
-		float threshold, ratio;
+		float threshold, ratio, knee;
 		float attack, release;
 		float outputGain;
+		bool rms;
 
 		GainReduction compressor;
 

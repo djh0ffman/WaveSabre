@@ -17,8 +17,8 @@ namespace WaveSabreCore
 		attack = 1.0f;
 		release = 200.0f;
 		outputGain = 0.0f;
-
-		peak = 0.0f;
+		knee = 1.0f;
+		rms = true;
 	}
 
 	Smasher2::~Smasher2()
@@ -30,6 +30,13 @@ namespace WaveSabreCore
 		leftBuffer.SetLength(lookaheadMs);
 		rightBuffer.SetLength(lookaheadMs);
 
+		compressor.SetAttack(attack);
+		compressor.SetRelease(release);
+		compressor.SetThreshold(threshold);
+		compressor.SetRatio(ratio);
+		compressor.SetKnee(knee);
+		compressor.SetRms(rms);
+
 		float inputGainScalar = Helpers::DbToScalar(inputGain);
 		float outputGainScalar = Helpers::DbToScalar(outputGain);
 		int inputChannelOffset = sidechain ? 2 : 0;
@@ -40,20 +47,20 @@ namespace WaveSabreCore
 
 		float thresholdScalar = Helpers::DbToScalar(threshold);
 
-		compressor.UpdateCurve();
-
 		for (int i = 0; i < numSamples; i++)
 		{
 			leftBuffer.WriteSample(inputs[0][i] * inputGainScalar);
 			rightBuffer.WriteSample(inputs[1][i] * inputGainScalar);
 
-			float inputLeft = inputs[inputChannelOffset][i] * inputGainScalar;
-			float inputRight = inputs[inputChannelOffset + 1][i] * inputGainScalar;
+			float keyLeft = inputs[inputChannelOffset][i] * inputGainScalar;
+			float keyRight = inputs[inputChannelOffset + 1][i] * inputGainScalar;
+			float inputLeft = leftBuffer.ReadSample();
+			float inputRight = rightBuffer.ReadSample();
 
-			compressor.Process(inputLeft, inputRight);
+			compressor.Process(inputLeft, inputRight, keyLeft, keyRight);
 
-			outputs[0][i] = leftBuffer.ReadSample() * gainScalar;
-			outputs[1][i] = rightBuffer.ReadSample() * gainScalar;
+			outputs[0][i] = inputLeft * outputGainScalar;
+			outputs[1][i] = inputRight * outputGainScalar;
 		}
 	}
 
@@ -68,6 +75,8 @@ namespace WaveSabreCore
 		case ParamIndices::Release: release = Helpers::ScalarToEnvValue(value); break;
 		case ParamIndices::Ratio: ratio = value * value * 18.0f + 2.0f; break;
 		case ParamIndices::OutputGain: outputGain = Helpers::ParamToDb(value, 12.0f); break;
+		case ParamIndices::Knee: knee = Helpers::ParamToDb(value / 2.0f, 36.0f); break;
+		case ParamIndices::Rms: rms = Helpers::ParamToBoolean(value); break;
 		}
 	}
 
@@ -81,10 +90,12 @@ namespace WaveSabreCore
 
 		case ParamIndices::InputGain: return Helpers::DbToParam(inputGain, 12.0f);
 		case ParamIndices::Threshold: return Helpers::DbToParam(threshold, 36.0f) * 2.0f;
-		case ParamIndices::Attack: return Helpers::EnvValueToScalar(attack * 5.0f); break;
-		case ParamIndices::Release: return Helpers::EnvValueToScalar(release); break;
+		case ParamIndices::Attack: return Helpers::EnvValueToScalar(attack * 5.0f);
+		case ParamIndices::Release: return Helpers::EnvValueToScalar(release);
 		case ParamIndices::Ratio: return sqrtf((ratio - 2.0f) / 18.0f);
 		case ParamIndices::OutputGain: return Helpers::DbToParam(outputGain, 12.0f);
+		case ParamIndices::Knee: return Helpers::DbToParam(knee, 36.0f) * 2.0f;
+		case ParamIndices::Rms: return Helpers::BooleanToParam(rms);
 		}
 		return 0.0f;
 	}

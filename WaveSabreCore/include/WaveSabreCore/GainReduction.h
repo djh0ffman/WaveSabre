@@ -9,22 +9,24 @@ namespace WaveSabreCore
 		GainReduction();
 		virtual ~GainReduction();
 		
-		void set_params(float att, float rel, float thr, float rat, float kn, float mak, float det, float stl, float byp, float mu);
 		void SetAttack(float attack);
 		void SetRelease(float release);
+		void SetThreshold(float threshold);
+		void SetRatio(float ratio);
+		void SetKnee(float knee);
+		void SetRms(bool rms);
 
-		void UpdateCurve();
-		void Process(float &left, float &right);
+		void Process(float &left, float &right, float &detLeft, float &detRight);
 
 	private:
 		float linSlope, detected, kneeSqrt, kneeStart, linKneeStart, kneeStop;
 		float compressedKneeStop, adjKneeStart, thres;
-		float attack, release, threshold, ratio, knee, makeup, detection, stereo_link;
+		float attack, release, threshold, ratio, knee;
+		bool rms;
 
-		mutable bool redraw_graph;
-		bool is_active;
-		inline float outputLevel(float slope) const;
-		inline float outputGain(float linSlope, bool rms) const;
+		bool recalc;
+		void updateCurve();
+		inline float outputGain(float linSlope) const;
 		inline float hermiteInterpolation(float x, float x0, float x1, float p0, float p1, float m0, float m1) const;
 	};
 }
