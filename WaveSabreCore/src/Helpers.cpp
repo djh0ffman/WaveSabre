@@ -371,4 +371,35 @@ namespace WaveSabreCore
 		else
 			return b;
 	}
+
+	float Helpers::ParamToLogScale(float value, float min, float max)
+	{
+		return min * Helpers::Pow(double(max / min), value);
+	}
+
+	float Helpers::LogScaleToParam(float value, float min, float max)
+	{
+		value /= min;
+		return log((double)value) / log((double)max / min);
+	}
+
+	float Helpers::ParamToDbScale(float value, float min, float max)
+	{
+		if (value < 0.00001)
+			return min;
+		else 
+		{
+			float rmin = Max(1.0f / 1024.0f, min);
+			return rmin * Pow(double(max / rmin), value);
+		}
+	}
+
+	float Helpers::DbScaleToParam(float value, float min, float max)
+	{
+		if (value < 1.0 / 1024.0) // new bottom limit - 60 dB
+			return 0;
+		double rmin = Max(1.0f / 1024.0f, min);
+		value /= rmin;
+		return log((double)value) / log(max / rmin);
+	}
 }

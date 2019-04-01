@@ -71,6 +71,12 @@ namespace WaveSabreCore
 
 		static float Min(float a, float b);
 		static float Max(float a, float b);
+
+		static float ParamToLogScale(float value, float min, float max);
+		static float LogScaleToParam(float value, float min, float max);
+
+		static float ParamToDbScale(float value, float min, float max);
+		static float DbScaleToParam(float value, float min, float max);
 	private:
 		static const int fastCosTabLog2Size = 9; // size = 512
 		static const int fastCosTabSize = (1 << fastCosTabLog2Size);

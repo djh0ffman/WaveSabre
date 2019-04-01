@@ -10,11 +10,11 @@ namespace WaveSabreCore
 		recalc = true;
 
 		linSlope = 0.0f;
-		attack = -1;
-		release = -1;
-		threshold = -1;
-		ratio = -1;
-		knee = -1;
+		attack = 20.0f;
+		release = 250.0f;
+		threshold = 0.125;
+		ratio = 2.0;
+		knee = 2.828427125;
 		rms = true;
 	}
 

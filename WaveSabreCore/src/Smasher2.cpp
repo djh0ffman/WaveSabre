@@ -70,12 +70,12 @@ namespace WaveSabreCore
 		{
 		case ParamIndices::Sidechain: sidechain = Helpers::ParamToBoolean(value); break;
 		case ParamIndices::InputGain: inputGain = Helpers::ParamToDb(value, 12.0f); break;
-		case ParamIndices::Threshold: threshold = Helpers::ParamToDb(value / 2.0f, 36.0f); break;
-		case ParamIndices::Attack: attack = Helpers::ScalarToEnvValue(value) / 5.0f; break;
-		case ParamIndices::Release: release = Helpers::ScalarToEnvValue(value); break;
-		case ParamIndices::Ratio: ratio = value * value * 18.0f + 2.0f; break;
+		case ParamIndices::Threshold: threshold = Helpers::ParamToDbScale(value, 0.000976563, 1.0); break;
+		case ParamIndices::Attack: attack = Helpers::ParamToLogScale(value, 0.01, 2000); break;
+		case ParamIndices::Release: release = Helpers::ParamToLogScale(value, 0.01, 2000); break;
+		case ParamIndices::Ratio: ratio = Helpers::ParamToLogScale(value, 1.0, 20); break;
 		case ParamIndices::OutputGain: outputGain = Helpers::ParamToDb(value, 12.0f); break;
-		case ParamIndices::Knee: knee = Helpers::ParamToDb(value / 2.0f, 36.0f); break;
+		case ParamIndices::Knee: knee = Helpers::ParamToDbScale(value, 1.0, 8.0); break;
 		case ParamIndices::Rms: rms = Helpers::ParamToBoolean(value); break;
 		}
 	}
@@ -89,12 +89,12 @@ namespace WaveSabreCore
 			return Helpers::BooleanToParam(sidechain);
 
 		case ParamIndices::InputGain: return Helpers::DbToParam(inputGain, 12.0f);
-		case ParamIndices::Threshold: return Helpers::DbToParam(threshold, 36.0f) * 2.0f;
-		case ParamIndices::Attack: return Helpers::EnvValueToScalar(attack * 5.0f);
-		case ParamIndices::Release: return Helpers::EnvValueToScalar(release);
-		case ParamIndices::Ratio: return sqrtf((ratio - 2.0f) / 18.0f);
+		case ParamIndices::Threshold: return Helpers::DbScaleToParam(threshold, 0.000976563, 1.0);
+		case ParamIndices::Attack: return Helpers::LogScaleToParam(attack, 0.01, 2000);
+		case ParamIndices::Release: return Helpers::LogScaleToParam(release, 0.01, 2000);
+		case ParamIndices::Ratio: return Helpers::LogScaleToParam(ratio, 1.0, 2.0);
 		case ParamIndices::OutputGain: return Helpers::DbToParam(outputGain, 12.0f);
-		case ParamIndices::Knee: return Helpers::DbToParam(knee, 36.0f) * 2.0f;
+		case ParamIndices::Knee: return Helpers::DbScaleToParam(knee, 1.0, 8.0);
 		case ParamIndices::Rms: return Helpers::BooleanToParam(rms);
 		}
 		return 0.0f;
