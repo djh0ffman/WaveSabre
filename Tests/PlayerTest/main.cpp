@@ -4,6 +4,7 @@ using namespace WaveSabrePlayerLib;
 #include <string.h>
 
 #include "Song.h"
+#include "Awesome.h"
 
 void progressCallback(double progress, void *data)
 {
@@ -49,6 +50,7 @@ int main(int argc, char **argv)
 			player = new RealtimePlayer(&Song);
 		}
 
+		printf("%s", logo);
 		printf("Realtime player activated. Press ESC to quit.\n");
 		player->Play();
 		while (!GetAsyncKeyState(VK_ESCAPE))
